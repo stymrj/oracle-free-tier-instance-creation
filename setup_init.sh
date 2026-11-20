@@ -16,8 +16,9 @@ is_debian_or_ubuntu() {
 }
 
 # Check if the argument is 'rerun'
+VENV_CREATED=0
+
 if [ "$1" != "rerun" ]; then
-    VENV_CREATED=0
 
     if is_debian_or_ubuntu && command -v apt >/dev/null 2>&1; then
         # Skip if python3-venv is already available to avoid a sudo hang for
