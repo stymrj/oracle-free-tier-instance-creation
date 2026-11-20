@@ -31,6 +31,16 @@ if [ "$1" != "rerun" ]; then
                 echo "WARNING: Could not install python3-venv (no sudo access?). Falling back to user-site pip install."
             fi
         fi
+
+        # Ensure pip3 is available
+        if ! command -v pip3 >/dev/null 2>&1; then
+            echo "pip3 not found. Attempting to install python3-pip..."
+            if sudo apt update -y && sudo apt install python3-pip -y; then
+                echo "pip3 installed successfully."
+            else
+                echo "WARNING: Could not install python3-pip (no sudo access?)."
+            fi
+        fi
     fi
 
     if python3 -m venv .venv 2>/dev/null; then
@@ -44,14 +54,24 @@ fi
 if [ "$VENV_CREATED" -eq 1 ]; then
     source .venv/bin/activate
     PIP_CMD="pip"
-else
+elif command -v pip3 >/dev/null 2>&1; then
     PIP_CMD="pip3 install --user"
+elif command -v python3 >/dev/null 2>&1 && python3 -m pip --version >/dev/null 2>&1; then
+    PIP_CMD="python3 -m pip install --user"
+else
+    echo "ERROR: Neither pip3 nor python3 -m pip is available. Cannot install dependencies."
+    PIP_CMD=""
 fi
 
 # Upgrade pip and install necessary packages (runs on fresh and rerun)
-$PIP_CMD --upgrade pip 2>/dev/null || true
-$PIP_CMD wheel setuptools 2>/dev/null || true
-$PIP_CMD -r requirements.txt
+if [ -n "$PIP_CMD" ]; then
+    $PIP_CMD --upgrade pip 2>/dev/null || true
+    $PIP_CMD wheel setuptools 2>/dev/null || true
+    $PIP_CMD -r requirements.txt
+else
+    echo "ERROR: Cannot install Python dependencies. Please install pip3 manually."
+    exit 1
+fi
 
 # Function to send Discord message
 send_discord_message() {
