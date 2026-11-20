@@ -15,62 +15,54 @@ is_debian_or_ubuntu() {
         { [ "$ID" = "debian" ] || [ "$ID" = "ubuntu" ] || [[ " $ID_LIKE " == *" debian "* ]]; }
 }
 
-# Check if the argument is 'rerun'
+# --- Environment setup (runs every time, skips what's already present) ---
 VENV_CREATED=0
 
-if [ "$1" != "rerun" ]; then
+# Return 0 if pip is available (either pip3 binary or python3 -m pip)
+ensure_pip() {
+    command -v pip3 >/dev/null 2>&1 && return 0
+    python3 -m pip --version >/dev/null 2>&1 && return 0
+    return 1
+}
 
-    if is_debian_or_ubuntu && command -v apt >/dev/null 2>&1; then
-        # Skip if python3-venv is already available to avoid a sudo hang for
-        # users who are not in the sudoers file (fixes #67).
-        if ! python3 -m venv --help >/dev/null 2>&1; then
-            echo "python3-venv not found. Attempting to install..."
-            if sudo apt update -y && sudo apt install python3-venv -y; then
-                echo "python3-venv installed successfully."
-            else
-                echo "WARNING: Could not install python3-venv (no sudo access?). Falling back to user-site pip install."
-            fi
-        fi
+# Install missing system packages on Debian/Ubuntu (pip + venv)
+if is_debian_or_ubuntu && command -v apt-get >/dev/null 2>&1; then
+    MISSING_PKGS=""
+    ensure_pip || MISSING_PKGS="$MISSING_PKGS python3-pip"
+    python3 -m venv --help >/dev/null 2>&1 || MISSING_PKGS="$MISSING_PKGS python3-venv"
 
-        # Ensure pip3 is available
-        if ! command -v pip3 >/dev/null 2>&1; then
-            echo "pip3 not found. Attempting to install python3-pip..."
-            if sudo apt update -y && sudo apt install python3-pip -y; then
-                echo "pip3 installed successfully."
-            else
-                echo "WARNING: Could not install python3-pip (no sudo access?)."
-            fi
-        fi
-    fi
-
-    if python3 -m venv .venv 2>/dev/null; then
-        VENV_CREATED=1
-        echo "Virtual environment created at .venv"
-    else
-        echo "WARNING: Virtual environment creation failed. Will install packages to user site instead."
+    if [ -n "$MISSING_PKGS" ]; then
+        echo "Installing missing packages:$MISSING_PKGS"
+        sudo apt-get update -y >/dev/null 2>&1 && sudo apt-get install -y $MISSING_PKGS || \
+            echo "WARNING: apt install failed. Trying to proceed anyway."
     fi
 fi
 
-if [ "$VENV_CREATED" -eq 1 ]; then
+# Remove a broken/partial venv from a previous failed run
+if [ -d .venv ] && [ ! -f .venv/bin/activate ]; then
+    rm -rf .venv
+    echo "Removed broken .venv directory."
+fi
+
+# Create virtual environment if possible, otherwise fall back to user-site install
+if python3 -m venv .venv 2>/dev/null; then
+    VENV_CREATED=1
     source .venv/bin/activate
-    PIP_CMD="pip"
-elif command -v pip3 >/dev/null 2>&1; then
-    PIP_CMD="pip3 install --user"
-elif command -v python3 >/dev/null 2>&1 && python3 -m pip --version >/dev/null 2>&1; then
-    PIP_CMD="python3 -m pip install --user"
+    echo "Using virtual environment (.venv)"
+elif ensure_pip; then
+    echo "Using user-site package install"
 else
-    echo "ERROR: Neither pip3 nor python3 -m pip is available. Cannot install dependencies."
-    PIP_CMD=""
+    echo "ERROR: pip is not available. Run: sudo apt install python3-pip python3-venv"
+    exit 1
 fi
 
-# Upgrade pip and install necessary packages (runs on fresh and rerun)
-if [ -n "$PIP_CMD" ]; then
-    $PIP_CMD --upgrade pip 2>/dev/null || true
-    $PIP_CMD wheel setuptools 2>/dev/null || true
-    $PIP_CMD -r requirements.txt
+# Install dependencies (skip if already installed, for speed)
+if python3 -c "import oci" 2>/dev/null; then
+    echo "Dependencies already installed. Skipping."
+elif [ "$VENV_CREATED" -eq 1 ]; then
+    python3 -m pip install -r requirements.txt
 else
-    echo "ERROR: Cannot install Python dependencies. Please install pip3 manually."
-    exit 1
+    python3 -m pip install --user -r requirements.txt
 fi
 
 # Function to send Discord message
