@@ -155,3 +155,20 @@ cython_debug/
 # PyCharm / JetBrains
 .idea/
 .vscode
+
+# --- OCI / Project-specific secrets & artifacts ------------------------------
+# Never commit real credentials
+oci.env
+oci.env.bak
+oci_config
+oci_api_private_key.pem
+*.pem
+
+# Generated at runtime
+*.log
+INSTANCE_CREATED
+ERROR_IN_CONFIG.log
+images_list.json
+id_rsa
+id_rsa.pub
+id_rsa_private

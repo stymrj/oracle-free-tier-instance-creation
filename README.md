@@ -1,35 +1,42 @@
-# 🚀 Oracle Free Tier Instance Creation
+<h1 align="center">
+  <img src="ai-image.jpg" alt="Oracle Free Tier Instance Creation" width="80" style="border-radius:16px"/><br/>
+  Oracle Free Tier Instance Creation
+</h1>
 
-Automate the creation of Oracle Cloud Infrastructure (OCI) Free Tier ARM and AMD instances with Python. Retries automatically until capacity becomes available, with optional email, Discord, and Telegram notifications.
+<p align="center">
+  <b>Automate the provisioning of Oracle Cloud Always-Free ARM &amp; AMD instances.</b><br/>
+  A resilient Python worker that retries until capacity frees up — so you don't have to keep clicking.
+</p>
 
-<div align="center">
+<p align="center">
+  <a href="#features"><img src="https://img.shields.io/badge/Features-Explore-blue?style=for-the-badge" alt="Features"/></a>
+  <a href="#quick-start"><img src="https://img.shields.io/badge/Quick_Start-🚀-brightgreen?style=for-the-badge" alt="Quick Start"/></a>
+  <a href="https://github.com/stymrj/oracle-free-tier-instance-creation/issues"><img src="https://img.shields.io/github/issues/stymrj/oracle-free-tier-instance-creation?style=for-the-badge&color=orange" alt="Issues"/></a>
+</p>
 
-<img src="ai-image.jpg" alt="Oracle Free Tier Instance Creation" width="700"/>
-
-</div>
-
-<div align="center">
-
-[![Python](https://img.shields.io/badge/Python-3.8+-blue?logo=python&logoColor=white&style=for-the-badge)](https://www.python.org/)
-[![Shell](https://img.shields.io/badge/Shell-Bash-green?logo=gnu-bash&logoColor=white&style=for-the-badge)](https://www.gnu.org/software/bash/)
-[![OCI](https://img.shields.io/badge/Oracle%20Cloud-Infrastructure-orange?logo=oracle&logoColor=white&style=for-the-badge)](https://www.oracle.com/cloud/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](CONTRIBUTING.md)
-[![Issues](https://img.shields.io/github/issues/stymrj/oracle-free-tier-instance-creation?style=for-the-badge)](https://github.com/stymrj/oracle-free-tier-instance-creation/issues)
-[![Forks](https://img.shields.io/github/forks/stymrj/oracle-free-tier-instance-creation?style=for-the-badge)](https://github.com/stymrj/oracle-free-tier-instance-creation/network)
-[![Stars](https://img.shields.io/github/stars/stymrj/oracle-free-tier-instance-creation?style=for-the-badge)](https://github.com/stymrj/oracle-free-tier-instance-creation/stargazers)
-
-</div>
+<p align="center">
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.8%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python"/></a>
+  <a href="https://www.gnu.org/software/bash/"><img src="https://img.shields.io/badge/Shell-Bash-4EAA25?style=flat-square&logo=gnu-bash&logoColor=white" alt="Bash"/></a>
+  <a href="https://www.oracle.com/cloud/"><img src="https://img.shields.io/badge/Oracle%20Cloud-Infrastructure-F80000?style=flat-square&logo=oracle&logoColor=white" alt="OCI"/></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="License"/></a>
+  <a href="https://github.com/stymrj/oracle-free-tier-instance-creation"><img src="https://img.shields.io/github/stars/stymrj/oracle-free-tier-instance-creation?style=flat-square" alt="Stars"/></a>
+  <a href="https://github.com/stymrj/oracle-free-tier-instance-creation/network/members"><img src="https://img.shields.io/github/forks/stymrj/oracle-free-tier-instance-creation?style=flat-square" alt="Forks"/></a>
+  <a href="#contributing"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square" alt="PRs Welcome"/></a>
+</p>
 
 ---
 
-## 📋 Table of Contents
+## 📖 Table of Contents
+
+<details>
+<summary><b>Click to expand</b></summary>
 
 - [✨ Features](#-features)
-- [🔧 How It Works](#-how-it-works)
+- [🎯 Why This Exists](#-why-this-exists)
+- [⚙️ How It Works](#️-how-it-works)
 - [📋 Prerequisites](#-prerequisites)
 - [🚀 Quick Start](#-quick-start)
-- [⚙️ Configuration](#️-configuration)
+- [🔧 Configuration](#-configuration)
 - [💻 Usage](#-usage)
 - [📁 Project Structure](#-project-structure)
 - [📢 Notifications](#-notifications)
@@ -41,180 +48,201 @@ Automate the creation of Oracle Cloud Infrastructure (OCI) Free Tier ARM and AMD
 - [📄 License](#-license)
 - [🔗 References](#-references)
 
+</details>
+
 ---
 
 ## ✨ Features
 
-| Feature | Status | Description |
-|---------|--------|-------------|
-| 🖥️ ARM & AMD Instances | ✅ | Provision Oracle Free Tier ARM (2 OCPU, 12 GB RAM) or AMD (1 OCPU, 1 GB RAM) |
-| 🔄 Auto-Retry | ✅ | Retries on "Out of host capacity" until resources become available |
-| 🔑 SSH Key Generation | ✅ | Automatic SSH key pair generation for ARM instances |
-| ⏱️ Configurable Interval | ✅ | Set retry wait time via `oci.env` |
-| 📧 Gmail Notifications | ✅ | Email alerts on success or failure |
-| 💬 Discord Webhook | ✅ | Send notifications to Discord channels |
-| 📱 Telegram Bot | ✅ | Get notified via Telegram |
-| 📊 Mermaid Flowchart | ✅ | Visual instance creation flow diagram |
-| 🛠️ Setup Scripts | ✅ | One-command install & run with `setup_env.sh` and `setup_init.sh` |
+| | | |
+|:---:|:---|:---|
+| 🖥️ **ARM & AMD** | Provision `VM.Standard.A1.Flex` (ARM) or `VM.Standard.E2.1.Micro` (AMD) Always-Free instances |
+| 🔁 **Auto-Retry** | Polls the `LaunchInstance` API and retries on `Out of host capacity` until a slot opens |
+| 🔑 **SSH Auto-Gen** | Generates an RSA key pair automatically if none exists at the configured path |
+| 🌍 **AD Rotation** | Rotates across multiple availability domains on each retry for better odds |
+| 📧 **Gmail Alerts** | Success & failure notifications straight to your inbox |
+| 💬 **Discord** | Webhook notifications for your server/channel |
+| 📱 **Telegram** | Bot notifications with token & user ID |
+| 🛠️ **Zero-Friction Setup** | Interactive `setup_env.sh` + `setup_init.sh` for one-command install & run |
+| 📊 **Observability** | Structured logs + a Mermaid flow diagram of the whole process |
 
 ---
 
-## 🔧 How It Works
+## 🎯 Why This Exists
 
-The script polls the OCI `LaunchInstance` API on a configurable interval. When capacity is unavailable, it catches retryable errors ("Out of host capacity", `429 TooManyRequests`, `5xx`, network blips) and retries — rotating across availability domains if you list more than one. On a hard failure (bad OCID, auth failure, quota exceeded) it stops so you can fix the config rather than looping forever.
+Oracle's **Always Free tier** offers powerful ARM compute — but the catch is real: **"Out of host capacity"** errors are constant. Free ARM hosts are in such high demand that clicking "Create" in the console is a losing game. Capacity frees up unpredictably, in small windows, and whoever polls at that exact second wins.
 
-> **Note (June 2026):** Oracle reduced the Always Free Ampere A1 allowance from 4 OCPU / 24 GB RAM to **2 OCPU / 12 GB RAM** (1,500 OCPU-hours + 9,000 GB-hours per month) on 15 June 2026. Pay-as-you-go tenancies may differ — check your own billing before assuming.
+This project is that poller. It:
+
+1. Hammers the launch API on a **polite interval** (default 60s).
+2. Recognizes the "no capacity, try again" family of errors.
+3. Grabs the slot **the instant one opens**.
+4. Notifies you on success — no manual babysitting.
+
+> **Note (June 2026):** Oracle reduced the Always-Free Ampere A1 allowance from **4 OCPU / 24 GB RAM** to **2 OCPU / 12 GB RAM** (1,500 OCPU-hours + 9,000 GB-hours/month). Verify your tenancy's actual limits in **Billing → Cost Analysis** before configuring.
+
+---
+
+## ⚙️ How It Works
+
+```
+loop:
+  LaunchInstance  shape=VM.Standard.A1.Flex ...
+  ├─ success              → write INSTANCE_CREATED, notify, exit 0
+  ├─ hard failure (4xx)   → print error, notify, stop (fix config)
+  │   e.g. auth failure / bad OCID / LimitExceeded
+  └─ transient error      → wait REQUEST_WAIT_TIME_SECS, rotate AD, retry
+      e.g. "Out of host capacity" / 429 / 5xx / timeout / network blip
+```
+
+The error handling is the important part: it **stops immediately on real problems** (bad OCID, auth failure, quota exceeded) instead of looping forever against a wall — and **keeps retrying on everything else**, so an unfamiliar transient error can't silently kill a multi-day hunt.
 
 ---
 
 ## 📋 Prerequisites
 
-Before you begin, make sure you have:
+| Requirement | Why |
+|-------------|-----|
+| [Oracle Cloud](https://www.oracle.com/cloud/free/) account | Always-Free tier eligibility |
+| OCI API key pair (`.pem` + config) | Signed API requests |
+| Ubuntu / Debian (or any Linux) | `bash`, `python3`, `pip3` |
+| Gmail + App Password *(optional)* | Email notifications |
+| Discord webhook / Telegram bot *(optional)* | Alternative notifications |
 
-- ☁️ An [Oracle Cloud](https://www.oracle.com/cloud/) account with Always Free eligibility
-- 🔑 An OCI API key pair (private key `.pem` and config file)
-- 🐧 An Ubuntu environment (VM.Standard.E2.1.Micro or any machine with `bash`, `python3`, and `pip3`)
-- 📧 A Gmail address and App Password (optional, for email notifications)
-- 💬 A Discord webhook URL or Telegram bot token (optional, for alternative notifications)
+### 🔐 Required Keys & OCIDs
 
-### Required Keys and OCIDs
+Per [Oracle's docs](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/apisigningkey.htm), you need:
 
-Per [Oracle's documentation](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/apisigningkey.htm), you need:
+1. An IAM user in a group with `manage` permissions on instances & VNICs
+2. An RSA key pair in **PEM format** (min 2048 bits)
+3. The **fingerprint** of the public key
+4. Your **tenancy OCID** and **user OCID**
 
-1. An IAM user in at least one group with the required permissions
-2. An RSA key pair in PEM format (minimum 2048 bits)
-3. The fingerprint of the public key
-4. Your tenancy's OCID and user's OCID
-
-> ⚠️ **Security Warning:** Both the private key and public key must be in PEM format. **Do not commit your private key to a public repository** — if you do, OCI will notify you to take corrective action.
+> ⚠️ **Never commit your private key.** OCI actively detects leaked keys in public repos and will flag your tenancy.
 
 ---
 
 ## 🚀 Quick Start
 
 ```bash
-# 1. Clone the repository
+# 1. Clone
 git clone https://github.com/stymrj/oracle-free-tier-instance-creation.git
-cd oracle-freetier-instance-creation
+cd oracle-free-tier-instance-creation
 
-# 2. Make setup scripts executable
+# 2. Configure your OCI API credentials
+cp sample_oci_config oci_config
+#   → edit oci_config with your user/fingerprint/tenancy/key_file
+
+# 3. Generate your environment config (interactive)
 chmod +x setup_env.sh setup_init.sh
-
-# 3. Run the interactive environment setup
 ./setup_env.sh
 
-# 4. Install dependencies and start the instance creation loop
+# 4. Install dependencies & launch the retry loop
 ./setup_init.sh
 ```
 
-> 💡 The first run installs required Python packages (`oci`, etc.) and starts `main.py` in the background. The script retries instance creation every 60 seconds (configurable) until it succeeds.
+That's it. The script now runs in the background, retrying every 60s until it lands an instance. On success you'll get a notification and an `INSTANCE_CREATED` file with the details.
 
 ---
 
-## ⚙️ Configuration
+## 🔧 Configuration
 
-### OCI Config
+### OCI API Config (`oci_config`)
 
-Copy `sample_oci_config` to `oci_config` and fill in your OCI API details:
+Copy `sample_oci_config` → `oci_config`:
 
-```
+```ini
 [DEFAULT]
 user=ocid1.user.oc1..xxxx
-fingerprint=xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx
+fingerprint=59:6f:12:ae:b4:31:5a:e0:d1:46:e7:2f:f1:a8:c0:f9
 tenancy=ocid1.tenancy.oc1..xxxx
-region=us-ashburn-1
-key_file=/home/ubuntu/oracle-freetier-instance-creation/oci_api_private_key.pem
+region=ap-hyderabad-1
+key_file=/home/ubuntu/oracle-free-tier-instance-creation/oci_api_private_key.pem
 ```
 
 ### Environment Variables (`oci.env`)
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `OCI_CONFIG` | ✅ Yes | Absolute path to your OCI config file |
-| `OCT_FREE_AD` | ✅ Yes | Always-Free Tier availability domain(s), comma-separated |
-| `DISPLAY_NAME` | ❌ No | Display name for the instance |
-| `REQUEST_WAIT_TIME_SECS` | ❌ No | Seconds to wait between retries (default: 60) |
-| `OCI_SUBNET_ID` | ❌ No | Subnet OCID (required when running locally) |
-| `OCI_IMAGE_ID` | ❌ No | Specific image OCID; auto-discovered if omitted |
-| `OCI_COMPUTE_SHAPE` | ❌ No | `VM.Standard.A1.Flex` or `VM.Standard.E2.1.Micro` |
-| `SECOND_MICRO_INSTANCE` | ❌ No | Set to `True` only for a second Always-Free Micro |
-| `OPERATING_SYSTEM` / `OS_VERSION` | ❌ No | Used to auto-discover the latest image |
-| `ASSIGN_PUBLIC_IP` | ❌ No | Assign an ephemeral public IP |
-| `BOOT_VOLUME_SIZE` | ❌ No | Boot volume size in GB (minimum 50) |
-| `NOTIFY_EMAIL` | ❌ No | `True` to enable email notifications |
-| `EMAIL` / `EMAIL_PASSWORD` | ❌ No | Gmail address and App Password |
-| `DISCORD_WEBHOOK` | ❌ No | Discord webhook URL |
-| `TELEGRAM_TOKEN` / `TELEGRAM_USER_ID` | ❌ No | Telegram bot token and user ID |
+Copy `oci.env.sample` → `oci.env`, or run `./setup_env.sh`.
 
-Generate `oci.env` interactively:
-
-```bash
-./setup_env.sh
-```
-
-> 📝 If `oci.env` already exists, a backup (`oci.env.bak`) is created before overwriting.
+| Variable | Required | Default | Description |
+|----------|:---:|---------|-------------|
+| `OCI_CONFIG` | ✅ | — | Absolute path to your OCI config file |
+| `OCT_FREE_AD` | ✅ | — | Availability domain(s), comma-separated |
+| `DISPLAY_NAME` | | `my-arm-ubuntu-instance` | Instance name in the console |
+| `REQUEST_WAIT_TIME_SECS` | | `60` | Seconds between retries |
+| `OCI_COMPUTE_SHAPE` | | `VM.Standard.A1.Flex` | ARM or AMD shape |
+| `SECOND_MICRO_INSTANCE` | | `False` | `True` for a 2nd Micro instance |
+| `SSH_AUTHORIZED_KEYS_FILE` | | `$PWD/id_rsa.pub` | SSH public key path |
+| `OCI_SUBNET_ID` | | auto | Required only when running locally |
+| `OCI_IMAGE_ID` | | auto | Specific image OCID |
+| `OPERATING_SYSTEM` | | `Canonical Ubuntu` | Used for image discovery |
+| `OS_VERSION` | | `22.04` | Used for image discovery |
+| `ASSIGN_PUBLIC_IP` | | `false` | Assign ephemeral public IP |
+| `BOOT_VOLUME_SIZE` | | `50` | Boot volume in GB (min 50) |
+| `NOTIFY_EMAIL` | | `False` | Enable Gmail notifications |
+| `EMAIL` / `EMAIL_PASSWORD` | | — | Gmail + App Password |
+| `DISCORD_WEBHOOK` | | — | Discord webhook URL |
+| `TELEGRAM_TOKEN` / `TELEGRAM_USER_ID` | | — | Telegram bot credentials |
 
 ---
 
 ## 💻 Usage
 
-Run from the project directory:
-
 ```bash
-# Start (installs dependencies and runs in background)
+# Fresh run (installs dependencies + starts loop)
 ./setup_init.sh
 
-# Re-run (skips dependency installation)
+# Re-run (skips dependency install, starts loop immediately)
 ./setup_init.sh rerun
 ```
 
-### Logs
+### 📜 Logs
 
-| File | Description |
-|------|-------------|
-| `launch_instance.log` | OCI API call logs |
-| `setup_and_info.log` | Instance parameters (AD, compartment, subnet, image) |
-| `UNHANDLED_ERROR.log` | Unhandled exceptions (emailed if enabled) |
-
-Once created, a file named `INSTANCE_CREATED` is generated with the instance details.
+| File | Contents |
+|------|----------|
+| `launch_instance.log` | Live API call results |
+| `setup_and_info.log` | Resolved params (AD, compartment, subnet, image) |
+| `UNHANDLED_ERROR.log` | Unhandled exceptions (also emailed) |
+| `INSTANCE_CREATED` | Instance details once created |
 
 ---
 
 ## 📁 Project Structure
 
 ```
-oracle-freetier-instance-creation/
-├── main.py                  # Core instance creation logic
-├── setup_env.sh             # Interactive oci.env generator
-├── setup_init.sh            # Dependency installer & runner
-├── sample_oci_config        # OCI config template
-├── oci.env                  # Environment variables (create this)
-├── oci_config               # OCI API config (create this)
-├── oci_api_private_key.pem  # Your OCI API private key (create this)
-├── ai-image.jpg             # Project cover image
-├── email_content.html       # Email notification template
-├── requirements.txt         # Python dependencies
-├── LICENSE                  # MIT License
-├── TROUBLESHOOTING.md       # Common errors and fixes
-└── README.md                # This file
+oracle-free-tier-instance-creation/
+├── main.py                 # Core provisioning logic
+├── setup_env.sh            # Interactive oci.env generator
+├── setup_init.sh           # Dependency installer & runner
+├── sample_oci_config       # OCI config template
+├── oci.env.sample          # Environment template
+├── email_content.html      # Email notification template
+├── requirements.txt        # Python dependencies
+├── TROUBLESHOOTING.md      # Error reference
+├── LICENSE                 # MIT
+└── README.md               # You are here
 ```
 
 ---
 
 ## 📢 Notifications
 
-### 📧 Email (Gmail)
-Set `NOTIFY_EMAIL=True` and provide your Gmail address and App Password in `oci.env`. You'll receive a notification on successful creation or on unhandled errors.
+### 📧 Gmail
+```bash
+NOTIFY_EMAIL=True
+EMAIL=you@gmail.com
+EMAIL_PASSWORD=your16charapppassword   # spaces are stripped automatically
+```
 
 ### 💬 Discord
-Add `DISCORD_WEBHOOK=your_webhook_url` to `oci.env`. Notifications are sent on success and on errors.
+```bash
+DISCORD_WEBHOOK=https://discord.com/api/webhooks/...
+```
 
 ### 📱 Telegram
-Create a bot via [@BotFather](https://t.me/botfather), get your token and user ID, then add:
-
 ```bash
-TELEGRAM_TOKEN=your_telegram_bot_token_here
-TELEGRAM_USER_ID=your_telegram_user_id_here
+TELEGRAM_TOKEN=123456:ABC-DEF...
+TELEGRAM_USER_ID=123456789
 ```
 
 ---
@@ -256,55 +284,76 @@ flowchart TD
 
 ## 🗺️ Roadmap
 
-- [ ] Make boot volume size configurable with free-tier limit handling
-- [ ] Assign a public IP automatically through the script
-- [ ] Interactive image/OS selection before launch
-- [ ] Local VPC and subnet creation from the script
+- [ ] Configurable boot volume size with free-tier limit handling
+- [ ] Automatic public IP assignment through the script
+- [ ] Interactive image/OS picker before launch
+- [ ] Local VCN & subnet creation from the script
+- [ ] Docker image for zero-dependency runs
 
 ---
 
 ## ❓ FAQ
 
-### Why do I keep seeing "Out of host capacity" errors?
+<details>
+<summary><b>Why do I keep seeing "Out of host capacity"?</b></summary>
+That's normal. Oracle has no free ARM slot right now. The script retries every `REQUEST_WAIT_TIME_SECS` seconds until one opens. Just leave it running — this can take hours to days.
+</details>
 
-This is normal. Oracle doesn't have free capacity in your availability domain right now. The script retries every `REQUEST_WAIT_TIME_SECS` seconds until capacity opens up.
+<details>
+<summary><b>Can I run this locally instead of on a Micro instance?</b></summary>
+Yes — set `OCI_SUBNET_ID` to an existing subnet OCID. Leave it empty only when running on a Micro instance (auto-detected).
+</details>
 
-### Can I run this locally instead of on an OCI Micro instance?
+<details>
+<summary><b>How do I stop the script?</b></summary>
+Press `Ctrl+C`, or kill the PID shown at startup. If using `screen`/`tmux`, re-attach and `Ctrl+C`.
+</details>
 
-Yes. Set `OCI_SUBNET_ID` in `oci.env` to an existing subnet OCID. The script will use that subnet instead of auto-detecting one.
+<details>
+<summary><b>What does `LimitExceeded` mean?</b></summary>
+You've hit a service limit — either an ARM instance already exists, or boot-volume storage is exhausted. Check the OCI console and your tenancy limits.
+</details>
 
-### How do I stop the script?
-
-Press `Ctrl+C` in the shell session, or kill the PID stored in `$SCRIPT_PID`. If you used `screen`, re-attach with `screen -r` then press `Ctrl+C`.
-
-### Where can I find more error-specific help?
-
-See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common errors and fixes.
+<details>
+<summary><b>Where's the troubleshooting guide?</b></summary>
+See [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+</details>
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please open an issue or submit a pull request.
+Contributions make this project better — all are welcome! 🎉
 
 1. **Fork** the repository
-2. **Create** your feature branch (`git checkout -b feature/amazing-feature`)
-3. **Commit** your changes (`git commit -m 'Add some amazing feature'`)
-4. **Push** to the branch (`git push origin feature/amazing-feature`)
-5. **Open** a pull request
+2. **Branch** — `git checkout -b feat/amazing-feature`
+3. **Commit** — `git commit -m "Add amazing feature"`
+4. **Push** — `git push origin feat/amazing-feature`
+5. **PR** — open a pull request
 
 ---
 
 ## 👤 Author
 
-**stymrj**  
-[GitHub Profile](https://github.com/stymrj) &nbsp;|&nbsp; [Repository](https://github.com/stymrj/oracle-free-tier-instance-creation)
+<table>
+<tr>
+<td align="center">
+  <a href="https://github.com/stymrj">
+    <img src="https://github.com/stymrj.png" width="100" style="border-radius:50%"/>
+    <br/>
+    <b>stymrj</b>
+  </a>
+  <br/>
+  <sub>Maintainer</sub>
+</td>
+</tr>
+</table>
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+Distributed under the **MIT License**. See [LICENSE](LICENSE) for more information.
 
 ---
 
@@ -312,15 +361,12 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 - [OCI Python SDK — Launch Instance Example](https://docs.oracle.com/en-us/iaas/tools/python-sdk-examples/latest/core/launch_instance.py.html)
 - [OCI SDK Authentication Methods](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdk%5Fauthentication%5Fmethods.htm)
-- [Required Keys and OCIDs for API Signing](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/apisigningkey.htm)
+- [Required Keys & OCIDs](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/apisigningkey.htm)
 - [OCI Python SDK Quickstart](https://docs.oracle.com/en-us/iaas/tools/python/latest/quickstart.html)
-- [OCI Python SDK Installation](https://docs.oracle.com/en-us/iaas/tools/python/latest/installation.html)
 - [Oracle Cloud Free Tier](https://www.oracle.com/cloud/free/)
 
 ---
 
-<div align="center">
-
-**Made with ❤️ by [stymrj](https://github.com/stymrj)**
-
-</div>
+<p align="center">
+  Made with ❤️ by <a href="https://github.com/stymrj">stymrj</a>
+</p>

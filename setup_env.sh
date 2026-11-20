@@ -37,6 +37,13 @@ while true; do
 done
 clear
 
+read -p "Enter the Availability Domain (e.g. AP-HYDERABAD-1-AD-1) or press Enter to auto-detect: " FREE_AD
+if [ -z "$FREE_AD" ]; then
+    FREE_AD="AD-1"
+    echo "Note: Set OCT_FREE_AD in oci.env to your real availability domain later."
+fi
+clear
+
 while true; do
     read -p "Use the script for your second free tier Micro Instance? (y/n): " BOOL_MICRO
     
@@ -91,7 +98,9 @@ if [[ $BOOL_MAIL == "True" ]]; then
     read -p "Enter your email: " EMAIL
     clear
 
-    read -p "Enter email app password (16 characters without spaces): " EMAIL_PASS
+    read -p "Enter email app password (16 characters, spaces will be removed): " EMAIL_PASS
+    # Gmail app passwords are 16 chars without spaces; strip any spaces the user may paste
+    EMAIL_PASS=$(echo "$EMAIL_PASS" | tr -d ' ')
     clear
 fi
 
@@ -111,22 +120,26 @@ if [ -f oci.env ]; then
 fi
 
 # Create the new oci.env file with the gathered configuration
+PROJECT_DIR="$(pwd)"
 cat <<EOF > oci.env
 # OCI Configuration
-OCI_CONFIG=$HOME/oracle-freetier-instance-creation/oci_config
-OCT_FREE_AD=AD-1
+OCI_CONFIG=$PROJECT_DIR/oci_config
+OCT_FREE_AD=$FREE_AD
 DISPLAY_NAME="$INSTANCE_NAME"
 # The other free shape is AMD: VM.Standard.E2.1.Micro
 OCI_COMPUTE_SHAPE=$SHAPE
 SECOND_MICRO_INSTANCE=$BOOL_MICRO
 REQUEST_WAIT_TIME_SECS=60
-SSH_AUTHORIZED_KEYS_FILE=$HOME/oracle-freetier-instance-creation/id_rsa.pub
-# SUBNET_ID to use ONLY in case running in local or a non E2.1.Micro instance 
+SSH_AUTHORIZED_KEYS_FILE=$PROJECT_DIR/id_rsa.pub
+# SUBNET_ID to use ONLY in case running in local or a non E2.1.Micro instance
 OCI_SUBNET_ID="$SUBNET_ID"
 OCI_IMAGE_ID="$IMAGE_ID"
 # The following will be ignored if OCI_IMAGE_ID is specified
 OPERATING_SYSTEM="Canonical Ubuntu"
 OS_VERSION=22.04
+ASSIGN_PUBLIC_IP=false
+# Boot volume size in GB (minimum is 50)
+BOOT_VOLUME_SIZE=50
 
 # Gmail Notification
 NOTIFY_EMAIL=$BOOL_MAIL
