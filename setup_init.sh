@@ -28,8 +28,11 @@ ensure_pip() {
 # Install missing system packages on Debian/Ubuntu (pip + venv)
 if is_debian_or_ubuntu && command -v apt-get >/dev/null 2>&1; then
     MISSING_PKGS=""
+    # pip check
     ensure_pip || MISSING_PKGS="$MISSING_PKGS python3-pip"
-    python3 -m venv --help >/dev/null 2>&1 || MISSING_PKGS="$MISSING_PKGS python3-venv"
+    # ensurepip check (python3-venv package provides ensurepip; 'venv --help'
+    # succeeds without it, so we must test ensurepip directly)
+    python3 -c "import ensurepip" 2>/dev/null || MISSING_PKGS="$MISSING_PKGS python3-venv"
 
     if [ -n "$MISSING_PKGS" ]; then
         echo "Installing missing packages:$MISSING_PKGS"
@@ -62,7 +65,9 @@ if python3 -c "import oci" 2>/dev/null; then
 elif [ "$VENV_CREATED" -eq 1 ]; then
     python3 -m pip install -r requirements.txt
 else
-    python3 -m pip install --user -r requirements.txt
+    python3 -m pip install --user -r requirements.txt \
+        || python3 -m pip install --user --break-system-packages -r requirements.txt \
+        || python3 -m pip install --break-system-packages -r requirements.txt
 fi
 
 # Function to send Discord message
