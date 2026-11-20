@@ -34,11 +34,12 @@
 - [✨ Features](#-features)
 - [🎯 Why This Exists](#-why-this-exists)
 - [⚙️ How It Works](#️-how-it-works)
-- [📋 Prerequisites](#-prerequisites)
+- [📋 Pre-Requisites](#-pre-requisites)
 - [🚀 Quick Start](#-quick-start)
-- [🔧 Configuration](#-configuration)
-- [💻 Usage](#-usage)
-- [📁 Project Structure](#-project-structure)
+- [🛠️ Detailed Setup](#️-detailed-setup)
+- [🔧 Environment Variables](#-environment-variables)
+- [💻 Run](#-run)
+- [⚠️ Errors & Re-Run](#️-errors--re-run)
 - [📢 Notifications](#-notifications)
 - [📊 Instance Creation Flow](#-instance-creation-flow)
 - [🗺️ Roadmap](#️-roadmap)
@@ -46,7 +47,7 @@
 - [🤝 Contributing](#-contributing)
 - [👤 Author](#-author)
 - [📄 License](#-license)
-- [🔗 References](#-references)
+- [🔗 Credits & References](#-credits--references)
 
 </details>
 
@@ -85,6 +86,8 @@ This project is that poller. It:
 
 ## ⚙️ How It Works
 
+The script attempts to create an instance every 60 seconds (or per `REQUEST_WAIT_TIME_SECS`) until it succeeds. On completion, it writes an `INSTANCE_CREATED` file with the instance details and (optionally) sends a notification.
+
 ```
 loop:
   LaunchInstance  shape=VM.Standard.A1.Flex ...
@@ -99,19 +102,17 @@ The error handling is the important part: it **stops immediately on real problem
 
 ---
 
-## 📋 Prerequisites
+## 📋 Pre-Requisites
 
-| Requirement | Why |
-|-------------|-----|
-| [Oracle Cloud](https://www.oracle.com/cloud/free/) account | Always-Free tier eligibility |
-| OCI API key pair (`.pem` + config) | Signed API requests |
-| Ubuntu / Debian (or any Linux) | `bash`, `python3`, `pip3` |
-| Gmail + App Password *(optional)* | Email notifications |
-| Discord webhook / Telegram bot *(optional)* | Alternative notifications |
+- **`VM.Standard.E2.1.Micro` Instance**: The script is designed for an Ubuntu environment. Create an always-free Micro instance (Ubuntu 22.04) — you need an existing subnet for ARM creation. This Micro instance can be deleted after the ARM instance is created. *(Not required if an existing `OCI_SUBNET_ID` is set in `oci.env`.)*
+- **OCI API Key & Config Details**: Follow the [Oracle API Key Generation guide](https://graph.org/Oracle-API-Key-Generation-12-11) to create the key pair and config.
+  - *Tip:* API keys are generated from your [profile page](https://cloud.oracle.com/identity/domains/my-profile/api-keys) → **API Keys** (left) → **Add API Key**.
+- **OCI Free Availability Domain**: Identify the eligibility always-free availability domain during instance creation.
+- **Gmail App Passkey *(optional)***: For email notifications with 2FA enabled, follow the [Google App Password guide](https://graph.org/Google-App-Passwords-Generation-12-11).
 
 ### 🔐 Required Keys & OCIDs
 
-Per [Oracle's docs](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/apisigningkey.htm), you need:
+Per [Oracle's docs](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/apisigningkey.htm):
 
 1. An IAM user in a group with `manage` permissions on instances & VNICs
 2. An RSA key pair in **PEM format** (min 2048 bits)
@@ -129,7 +130,7 @@ Per [Oracle's docs](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/apis
 git clone https://github.com/stymrj/oracle-free-tier-instance-creation.git
 cd oracle-free-tier-instance-creation
 
-# 2. Configure your OCI API credentials
+# 2. Configure OCI API credentials
 cp sample_oci_config oci_config
 #   → edit oci_config with your user/fingerprint/tenancy/key_file
 
@@ -141,60 +142,81 @@ chmod +x setup_env.sh setup_init.sh
 ./setup_init.sh
 ```
 
-That's it. The script now runs in the background, retrying every 60s until it lands an instance. On success you'll get a notification and an `INSTANCE_CREATED` file with the details.
+---
+
+## 🛠️ Detailed Setup
+
+1. **SSH into your Micro instance**, clone the repo, and navigate into it:
+   ```bash
+   git clone https://github.com/stymrj/oracle-free-tier-instance-creation.git
+   cd oracle-free-tier-instance-creation
+   ```
+
+2. **Create `oci_api_private_key.pem`** and paste your API private key contents. The name and path can be anything, but the current user must have read access.
+
+3. **Create `oci_config`** in the repo directory and paste the config details you copied during API key creation. See [`sample_oci_config`](sample_oci_config).
+
+4. In `oci_config`, set **`key_file`** to the absolute path of your private key:
+   ```ini
+   key_file=/home/ubuntu/oracle-free-tier-instance-creation/oci_api_private_key.pem
+   ```
+
+5. **Configure `oci.env`** — either manually (copy `oci.env.sample`) or interactively:
+   ```bash
+   ./setup_env.sh
+   ```
+   This walks you through instance name, compute shape, availability domain, Gmail notifications, and more.
+
+   > **Note:** If `oci.env` already exists, the script backs it up as `oci.env.bak`.
 
 ---
 
-## 🔧 Configuration
+## 🔧 Environment Variables
 
-### OCI API Config (`oci_config`)
+### Required Fields
 
-Copy `sample_oci_config` → `oci_config`:
+| Variable | Description |
+|----------|-------------|
+| `OCI_CONFIG` | Absolute path to the file with OCI API config details |
+| `OCT_FREE_AD` | Availability domain eligible for the **Always-Free tier**. Separate multiple by commas — the script **rotates** through them on each retry (not in parallel) |
 
-```ini
-[DEFAULT]
-user=ocid1.user.oc1..xxxx
-fingerprint=59:6f:12:ae:b4:31:5a:e0:d1:46:e7:2f:f1:a8:c0:f9
-tenancy=ocid1.tenancy.oc1..xxxx
-region=ap-hyderabad-1
-key_file=/home/ubuntu/oracle-free-tier-instance-creation/oci_api_private_key.pem
-```
+### Optional Fields
 
-### Environment Variables (`oci.env`)
-
-Copy `oci.env.sample` → `oci.env`, or run `./setup_env.sh`.
-
-| Variable | Required | Default | Description |
-|----------|:---:|---------|-------------|
-| `OCI_CONFIG` | ✅ | — | Absolute path to your OCI config file |
-| `OCT_FREE_AD` | ✅ | — | Availability domain(s), comma-separated |
-| `DISPLAY_NAME` | | `my-arm-ubuntu-instance` | Instance name in the console |
-| `REQUEST_WAIT_TIME_SECS` | | `60` | Seconds between retries |
-| `OCI_COMPUTE_SHAPE` | | `VM.Standard.A1.Flex` | ARM or AMD shape |
-| `SECOND_MICRO_INSTANCE` | | `False` | `True` for a 2nd Micro instance |
-| `SSH_AUTHORIZED_KEYS_FILE` | | `$PWD/id_rsa.pub` | SSH public key path |
-| `OCI_SUBNET_ID` | | auto | Required only when running locally |
-| `OCI_IMAGE_ID` | | auto | Specific image OCID |
-| `OPERATING_SYSTEM` | | `Canonical Ubuntu` | Used for image discovery |
-| `OS_VERSION` | | `22.04` | Used for image discovery |
-| `ASSIGN_PUBLIC_IP` | | `false` | Assign ephemeral public IP |
-| `BOOT_VOLUME_SIZE` | | `50` | Boot volume in GB (min 50) |
-| `NOTIFY_EMAIL` | | `False` | Enable Gmail notifications |
-| `EMAIL` / `EMAIL_PASSWORD` | | — | Gmail + App Password |
-| `DISCORD_WEBHOOK` | | — | Discord webhook URL |
-| `TELEGRAM_TOKEN` / `TELEGRAM_USER_ID` | | — | Telegram bot credentials |
+| Variable | Description |
+|----------|-------------|
+| `DISPLAY_NAME` | Name of the instance |
+| `REQUEST_WAIT_TIME_SECS` | Wait time (seconds) before trying to launch again |
+| `SSH_AUTHORIZED_KEYS_FILE` | Absolute path of an SSH public key for the ARM instance. **A key pair is auto-generated at this path if it doesn't exist; otherwise the existing key is used.** |
+| `OCI_SUBNET_ID` | OCID of an existing subnet. **Required when running locally** (not on a Micro instance). Leave empty on a Micro instance — the subnet is auto-detected. Leaving it empty while running locally may pick an unexpected subnet.<br/>👉 *Found at `Networking` → `Virtual cloud networks` → `<VPC-Name>` → `Subnet Details`.* |
+| `OCI_IMAGE_ID` | Specific image OCID. If empty, `OPERATING_SYSTEM` + `OS_VERSION` are used to find the newest match. The first run writes all options to `images_list.json` — check it for valid image OCIDs. |
+| `OCI_COMPUTE_SHAPE` | Free-tier compute shape. Defaults to ARM. Accepts `VM.Standard.A1.Flex` or `VM.Standard.E2.1.Micro`. |
+| `SECOND_MICRO_INSTANCE` | Set `True` only when creating your **second** Always-Free Micro instance. Keep `False` for your first Micro or any ARM instance. |
+| `OPERATING_SYSTEM` | Exact OS name |
+| `OS_VERSION` | Exact OS version |
+| `ASSIGN_PUBLIC_IP` | Automatically assign an ephemeral public IP |
+| `BOOT_VOLUME_SIZE` | Boot volume size in GB (values below 50 are ignored, defaults to 50) |
+| `NOTIFY_EMAIL` | `True` to enable email notifications |
+| `EMAIL` | Gmail only — used for both *FROM* and *TO* |
+| `EMAIL_PASSWORD` | With 2FA, use an **App Password** (not your email password). Spaces are stripped automatically. |
+| `DISCORD_WEBHOOK` | Discord webhook URL *(optional)* |
+| `TELEGRAM_TOKEN` / `TELEGRAM_USER_ID` | Telegram bot credentials *(optional)* |
 
 ---
 
-## 💻 Usage
+## 💻 Run
+
+Once setup is complete, run from the project directory:
 
 ```bash
-# Fresh run (installs dependencies + starts loop)
 ./setup_init.sh
-
-# Re-run (skips dependency install, starts loop immediately)
-./setup_init.sh rerun
 ```
+
+This installs dependencies and starts the Python program in the background.
+
+- On a **fresh Micro instance** you may see a *"Daemons using outdated libraries"* prompt — just click **OK** (it's from `apt update` and won't reappear).
+- Running **locally** (not on a Micro instance)? Make sure `OCI_SUBNET_ID` is set.
+
+The script prints an error prompt on failure, or **"Script is running successfully"** when healthy.
 
 ### 📜 Logs
 
@@ -207,21 +229,14 @@ Copy `oci.env.sample` → `oci.env`, or run `./setup_env.sh`.
 
 ---
 
-## 📁 Project Structure
+## ⚠️ Errors & Re-Run
 
-```
-oracle-free-tier-instance-creation/
-├── main.py                 # Core provisioning logic
-├── setup_env.sh            # Interactive oci.env generator
-├── setup_init.sh           # Dependency installer & runner
-├── sample_oci_config       # OCI config template
-├── oci.env.sample          # Environment template
-├── email_content.html      # Email notification template
-├── requirements.txt        # Python dependencies
-├── TROUBLESHOOTING.md      # Error reference
-├── LICENSE                 # MIT
-└── README.md               # You are here
-```
+- **Wrong `oci_config`?** The script writes `ERROR_IN_CONFIG.log`. Verify `oci_config` matches [`sample_oci_config`](sample_oci_config) exactly — no extra lines or characters.
+- **Unhandled exception?** An email is sent (if opted); otherwise the error is logged to `UNHANDLED_ERROR.log`. Review it and re-run (skips dependency install):
+  ```bash
+  ./setup_init.sh rerun
+  ```
+  If the issue persists, open an issue with the contents of `UNHANDLED_ERROR.log`.
 
 ---
 
@@ -231,18 +246,32 @@ oracle-free-tier-instance-creation/
 ```bash
 NOTIFY_EMAIL=True
 EMAIL=you@gmail.com
-EMAIL_PASSWORD=your16charapppassword   # spaces are stripped automatically
+EMAIL_PASSWORD=your16charapppassword   # spaces stripped automatically
 ```
 
-### 💬 Discord
-```bash
-DISCORD_WEBHOOK=https://discord.com/api/webhooks/...
-```
+### 💬 Discord Webhook
+1. In Discord: **Server Settings → Integrations → Webhooks**
+2. Click **"New Webhook"** and pick the target channel
+3. Copy the webhook URL
+4. Add to `oci.env`:
+   ```
+   DISCORD_WEBHOOK=your_discord_webhook_url_here
+   ```
 
 ### 📱 Telegram
+**1. Create a bot**
+1. Open Telegram, search `@BotFather`, start a chat
+2. Send `/newbot`, follow prompts (username must end in `bot`)
+3. Copy the **Bot Token**
+
+**2. Get your User ID**
+1. Search `@myidbot`, send any message
+2. Note the returned **User ID**
+
+**3. Configure `oci.env`**
 ```bash
-TELEGRAM_TOKEN=123456:ABC-DEF...
-TELEGRAM_USER_ID=123456789
+TELEGRAM_TOKEN=your_telegram_bot_token_here
+TELEGRAM_USER_ID=your_telegram_user_id_here
 ```
 
 ---
@@ -284,40 +313,35 @@ flowchart TD
 
 ## 🗺️ Roadmap
 
-- [ ] Configurable boot volume size with free-tier limit handling
-- [ ] Automatic public IP assignment through the script
+- [x] Configure existing subnet ID in `OCI_CONFIG` for local runs
+- [x] Redirect logs to a Telegram bot
+- [ ] Create VPC & subnet from the script when running locally
+- [ ] Make boot volume size configurable with free-tier limit handling
+- [ ] Assign a public IP through the script with limit handling
 - [ ] Interactive image/OS picker before launch
-- [ ] Local VCN & subnet creation from the script
 - [ ] Docker image for zero-dependency runs
 
 ---
 
 ## ❓ FAQ
 
-<details>
-<summary><b>Why do I keep seeing "Out of host capacity"?</b></summary>
-That's normal. Oracle has no free ARM slot right now. The script retries every `REQUEST_WAIT_TIME_SECS` seconds until one opens. Just leave it running — this can take hours to days.
-</details>
+**Is the script actually working? The log shows "Out of host capacity" errors.**
 
-<details>
-<summary><b>Can I run this locally instead of on a Micro instance?</b></summary>
-Yes — set `OCI_SUBNET_ID` to an existing subnet OCID. Leave it empty only when running on a Micro instance (auto-detected).
-</details>
+Yes — completely normal. `Out of host capacity` (or `InternalError: Out of host capacity`) means Oracle has no free capacity right now. The script keeps retrying every `REQUEST_WAIT_TIME_SECS` seconds until capacity opens. As long as you see these lines in `launch_instance.log`, it's running correctly.
 
-<details>
-<summary><b>How do I stop the script?</b></summary>
-Press `Ctrl+C`, or kill the PID shown at startup. If using `screen`/`tmux`, re-attach and `Ctrl+C`.
-</details>
+**How do I stop the script?**
 
-<details>
-<summary><b>What does `LimitExceeded` mean?</b></summary>
-You've hit a service limit — either an ARM instance already exists, or boot-volume storage is exhausted. Check the OCI console and your tenancy limits.
-</details>
+Press `Ctrl+C`, or kill the PID shown at startup. If you used `screen`, re-attach with `screen -r` then `Ctrl+C`. The background PID is stored in `$SCRIPT_PID` while `setup_init.sh` is running.
 
-<details>
-<summary><b>Where's the troubleshooting guide?</b></summary>
-See [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
-</details>
+**How do I change how often it retries?**
+
+Set `REQUEST_WAIT_TIME_SECS` in `oci.env` (default 60s). Setting it too low (e.g. < 30s) risks OCI rate-limiting (`TooManyRequests`).
+
+**I see a `LimitExceeded` error — do I already have an instance?**
+
+Not necessarily. It means you hit a service limit. Log into the [OCI Console](https://cloud.oracle.com) and check whether an ARM instance already exists (the script should detect it and exit). If not, the limit may be boot-volume storage.
+
+**For more error-specific help, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md).**
 
 ---
 
@@ -357,13 +381,14 @@ Distributed under the **MIT License**. See [LICENSE](LICENSE) for more informati
 
 ---
 
-## 🔗 References
+## 🔗 Credits & References
 
+- [xitroff](https://www.reddit.com/user/xitroff/) — [Resolving Oracle Cloud Out of Capacity Issue and Getting Free VPS with 4 ARM Cores, 24GB of RAM](https://hitrov.medium.com/resolving-oracle-cloud-out-of-capacity-issue-and-getting-free-vps-with-4-arm-cores-24gb-of-a3d7e6a027a8) / [oci-arm-host-capacity](https://github.com/hitrov/oci-arm-host-capacity)
+- [Oracle Launch Instance Docs](https://docs.oracle.com/en-us/iaas/api/#/en/iaas/20160918/Instance/LaunchInstance)
+- [LaunchInstanceDetails](https://docs.oracle.com/en-us/iaas/api/#/en/iaas/20160918/datatypes/LaunchInstanceDetails)
 - [OCI Python SDK — Launch Instance Example](https://docs.oracle.com/en-us/iaas/tools/python-sdk-examples/latest/core/launch_instance.py.html)
 - [OCI SDK Authentication Methods](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdk%5Fauthentication%5Fmethods.htm)
 - [Required Keys & OCIDs](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/apisigningkey.htm)
-- [OCI Python SDK Quickstart](https://docs.oracle.com/en-us/iaas/tools/python/latest/quickstart.html)
-- [Oracle Cloud Free Tier](https://www.oracle.com/cloud/free/)
 
 ---
 
