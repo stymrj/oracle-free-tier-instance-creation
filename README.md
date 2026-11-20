@@ -18,6 +18,11 @@ Automate the creation of Oracle Cloud Infrastructure (OCI) Free Tier ARM and AMD
 
 </div>
 
+## Author
+
+Maintained by [stymrj](https://github.com/stymrj).
+
+
 ## Table of Contents
 
 - [Features](#features)
@@ -251,6 +256,8 @@ See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common errors and fixes.
 ## Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request.
+
+Maintained by [stymrj](https://github.com/stymrj) — feel free to reach out on GitHub.
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
