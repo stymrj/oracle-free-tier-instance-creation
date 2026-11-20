@@ -48,12 +48,10 @@ else
     PIP_CMD="pip3 install --user"
 fi
 
-# Upgrade pip and install necessary packages
-if [ "$1" != "rerun" ]; then
-    $PIP_CMD --upgrade pip 2>/dev/null || true
-    $PIP_CMD wheel setuptools 2>/dev/null || true
-    $PIP_CMD -r requirements.txt
-fi
+# Upgrade pip and install necessary packages (runs on fresh and rerun)
+$PIP_CMD --upgrade pip 2>/dev/null || true
+$PIP_CMD wheel setuptools 2>/dev/null || true
+$PIP_CMD -r requirements.txt
 
 # Function to send Discord message
 send_discord_message() {
