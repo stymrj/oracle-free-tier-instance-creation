@@ -17,24 +17,41 @@ is_debian_or_ubuntu() {
 
 # Check if the argument is 'rerun'
 if [ "$1" != "rerun" ]; then
+    VENV_CREATED=0
+
     if is_debian_or_ubuntu && command -v apt >/dev/null 2>&1; then
         # Skip if python3-venv is already available to avoid a sudo hang for
         # users who are not in the sudoers file (fixes #67).
         if ! python3 -m venv --help >/dev/null 2>&1; then
-            sudo apt update -y
-            sudo apt install python3-venv -y
+            echo "python3-venv not found. Attempting to install..."
+            if sudo apt update -y && sudo apt install python3-venv -y; then
+                echo "python3-venv installed successfully."
+            else
+                echo "WARNING: Could not install python3-venv (no sudo access?). Falling back to user-site pip install."
+            fi
         fi
     fi
-    python3 -m venv .venv
+
+    if python3 -m venv .venv 2>/dev/null; then
+        VENV_CREATED=1
+        echo "Virtual environment created at .venv"
+    else
+        echo "WARNING: Virtual environment creation failed. Will install packages to user site instead."
+    fi
 fi
 
-source .venv/bin/activate
+if [ "$VENV_CREATED" -eq 1 ]; then
+    source .venv/bin/activate
+    PIP_CMD="pip"
+else
+    PIP_CMD="pip3 install --user"
+fi
 
 # Upgrade pip and install necessary packages
 if [ "$1" != "rerun" ]; then
-    pip install --upgrade pip
-    pip install wheel setuptools
-    pip install -r requirements.txt
+    $PIP_CMD --upgrade pip 2>/dev/null || true
+    $PIP_CMD wheel setuptools 2>/dev/null || true
+    $PIP_CMD -r requirements.txt
 fi
 
 # Function to send Discord message
@@ -140,8 +157,10 @@ if [ "$SCRIPT_FAILED" -ne 1 ]; then
     send_notification "🏁 The OCI Instance Creation Script has finished running."
 fi
 
-# Deactivate the virtual environment
-deactivate
+# Deactivate the virtual environment if we activated one
+if [ "$VENV_CREATED" -eq 1 ]; then
+    deactivate
+fi
 
 # Exit the script
 NORMAL_EXIT=1
